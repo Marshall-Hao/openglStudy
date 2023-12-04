@@ -1,0 +1,30 @@
+# We will always try to use a version > 3.1 if avaliable
+cmake_minimum_required(VERSION 3.2)
+
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE AND DEFINED ENV{CMAKE_TOOLCHAIN_FILE})
+   set(CMAKE_TOOLCHAIN_FILE $ENV{CMAKE_TOOLCHAIN_FILE})
+endif()
+
+project(opengl_study)
+
+# Here we set the C++ standard to use
+set(CMAKE_CXX_STANDARD 17)
+
+find_package(glfw3 CONFIG REQUIRED)
+find_package(glad CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+
+
+add_executable(openglStudy)
+target_include_directories(openglStudy PRIVATE include)
+
+target_sources(openglStudy
+        PRIVATE
+        src/openGLFW.cpp
+   )
+
+target_link_libraries(openglStudy
+        PRIVATE
+        glfw
+        glad::glad
+        glm::glm)
