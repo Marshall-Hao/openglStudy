@@ -7,10 +7,25 @@
 #include <sstream>
 #include <string>
 
+// VBO: vertex buffer object
 unsigned int VBO = 0;
+// VA0: vertex array object
+unsigned int VAO = 0;
+// shader program
 unsigned int shaderProgram = 0;
 
-void render() {}
+void render()
+{
+  // draw our first triangle
+  // 1. bind vertex array object
+  glBindVertexArray(VAO);
+  // 2. use shader program
+  glUseProgram(shaderProgram);
+  // 3. draw the triangle
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+  // 4. unbind vertex array object
+  glUseProgram(0);
+}
 
 void initModel()
 {
@@ -19,6 +34,12 @@ void initModel()
       0.5f,  -0.5f, 0.0f,  // right
       0.0f,  0.5f,  0.0f   // top
   };
+
+  // create a vertex array object
+  glGenVertexArrays(1, &VAO);
+  // bind the vertex array object
+  // VAO include the VBO and the vertex attribute
+  glBindVertexArray(VAO);
 
   // create a vertex buffer object , 1 is how many VBOs we want to generate
   // VBO is a buffer in the GPU's memory
@@ -76,6 +97,57 @@ void initShader(const char* _vertexPath, const char* _fragPath)
   // c_str() convert string to char*
   const char* _vShaderStr = _vertexCode.c_str();
   const char* _fShaderStr = _fragCode.c_str();
+
+  // shader program
+  unsigned int _vertexID = 0, _fragID = 0;
+  char _infoLog[512];
+  int _successFlag;
+
+  // create vertex shader
+  // shader ID
+  _vertexID = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(_vertexID, 1, &_vShaderStr, NULL);
+  glCompileShader(_vertexID);
+  // check for shader compile errors
+  glGetShaderiv(_vertexID, GL_COMPILE_STATUS, &_successFlag);
+  if (!_successFlag)
+  {
+    glGetShaderInfoLog(_vertexID, 512, NULL, _infoLog);
+    std::string errStr(_infoLog);
+    std::cout << errStr << std::endl;
+  }
+
+  _fragID = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(_fragID, 1, &_fShaderStr, NULL);
+  glCompileShader(_fragID);
+
+  glGetShaderiv(_fragID, GL_COMPILE_STATUS, &_successFlag);
+  if (!_successFlag)
+  {
+    glGetShaderInfoLog(_fragID, 512, NULL, _infoLog);
+    std::string errStr(_infoLog);
+    std::cout << errStr << std::endl;
+  }
+
+  // create shader program
+  shaderProgram = glCreateProgram();
+  // attach shader to the program
+  glAttachShader(shaderProgram, _vertexID);
+  glAttachShader(shaderProgram, _fragID);
+  // link the program
+  glLinkProgram(shaderProgram);
+
+  // check for linking errors
+  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &_successFlag);
+  if (!_successFlag)
+  {
+    glGetProgramInfoLog(shaderProgram, 512, NULL, _infoLog);
+    std::string errStr(_infoLog);
+    std::cout << errStr << std::endl;
+  }
+  // delete the shader, its all has been linked to the program
+  glDeleteShader(_vertexID);
+  glDeleteShader(_fragID);
 }
 
 // settings
@@ -137,6 +209,7 @@ int main()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    render();
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse,
     // double cached
     glfwSwapBuffers(window);
