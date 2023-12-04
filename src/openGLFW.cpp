@@ -1,39 +1,39 @@
-// clang-format off
-#include <glad/glad.h>// GLAD should be included first
-#include <GLFW/glfw3.h>
-// clang-format on
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-
+#include "Base.h"
+#include "Shader.h"
 // VBO: vertex buffer object
 unsigned int VBO = 0;
 // VA0: vertex array object
 unsigned int VAO = 0;
 // shader program
-unsigned int shaderProgram = 0;
+Shader _shader;
 
 void render()
 {
+  // alaways use shader program first, then it will be used to render,and the
+  // unifrom will know where it should be
+  _shader.start();
+  // time
+  // pass the uniform value to the shader
+
   // draw our first triangle
   // 1. bind vertex array object
   glBindVertexArray(VAO);
-  // 2. use shader program
-  glUseProgram(shaderProgram);
+
   // 3. draw the triangle
   glDrawArrays(GL_TRIANGLES, 0, 3);
   // 4. unbind vertex array object
-  glUseProgram(0);
+  _shader.end();
 }
 
 void initModel()
 {
+  // clang-format off
   float vertices[] = {
-      -0.5f, -0.5f, 0.0f,  // left
-      0.5f,  -0.5f, 0.0f,  // right
-      0.0f,  0.5f,  0.0f   // top
+      -0.5f, -0.5f, 0.0f, 1.0f , 0.0f, 0.0f,// left
+      0.5f,  -0.5f, 0.0f, 0.0f , 1.0f, 0.0f,// right
+      0.0f,  0.5f,  0.0f, 0.0f , 0.0f, 1.0f // top
   };
+  // clang-format on
 
   // create a vertex array object
   glGenVertexArrays(1, &VAO);
@@ -50,104 +50,27 @@ void initModel()
   // GL_STATIC_DRAW: the data will most likely not change at all or very rarely.
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   // tell OpenGL how it should interpret the vertex data (per vertex attribute)
-  // 0 is  the vertex attribute location ,layout (location = 0) in the vertex
-  // (void*)0 for last parameter: the offset of where the position data begins,
-  // this case is the first element of the array
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  // 0 is  the vertex attribute location, corresponding to the layout (location
+  // =0 or 1 or ...
+  // (void*)0 for last parameter: the offset of where the
+  // position data begins, this case is the first element of the array
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+  // enable the vertex attribute for color for layout 1, stride is 6 * sizeof
+  // float , and color start at 3 * sizeof float
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                        (void*)(sizeof(float) * 3));
+
   // enable the vertex attribute
   glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
   // unbind the buffer
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 }
 
 void initShader(const char* _vertexPath, const char* _fragPath)
 {
-  std::string _vertexCode("");
-  std::string _fragCode("");
-
-  // read the shader code from the file
-  std::ifstream _vertexFile;
-  std::ifstream _fragFile;
-
-  // ensure ifstream objects can throw exceptions
-  _vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-  _fragFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-  try
-  {
-    // open  files
-    _vertexFile.open(_vertexPath);
-    _fragFile.open(_fragPath);
-    // read file's buffer contents into streams, stringstream is a stream, can
-    // be dynamic
-    std::stringstream _vertexStream, _fragStream;
-    // read file buffer content into stream
-    _vertexStream << _vertexFile.rdbuf();
-    _fragStream << _fragFile.rdbuf();
-    // close file handlers
-    _vertexCode = _vertexStream.str();
-    _fragCode = _fragStream.str();
-  }
-  catch (const std::exception& e)
-  {
-    std::cerr << e.what() << '\n';
-  }
-
-  // convert string to char*
-  // c_str() convert string to char*
-  const char* _vShaderStr = _vertexCode.c_str();
-  const char* _fShaderStr = _fragCode.c_str();
-
-  // shader program
-  unsigned int _vertexID = 0, _fragID = 0;
-  char _infoLog[512];
-  int _successFlag;
-
-  // create vertex shader
-  // shader ID
-  _vertexID = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(_vertexID, 1, &_vShaderStr, NULL);
-  glCompileShader(_vertexID);
-  // check for shader compile errors
-  glGetShaderiv(_vertexID, GL_COMPILE_STATUS, &_successFlag);
-  if (!_successFlag)
-  {
-    glGetShaderInfoLog(_vertexID, 512, NULL, _infoLog);
-    std::string errStr(_infoLog);
-    std::cout << errStr << std::endl;
-  }
-
-  _fragID = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(_fragID, 1, &_fShaderStr, NULL);
-  glCompileShader(_fragID);
-
-  glGetShaderiv(_fragID, GL_COMPILE_STATUS, &_successFlag);
-  if (!_successFlag)
-  {
-    glGetShaderInfoLog(_fragID, 512, NULL, _infoLog);
-    std::string errStr(_infoLog);
-    std::cout << errStr << std::endl;
-  }
-
-  // create shader program
-  shaderProgram = glCreateProgram();
-  // attach shader to the program
-  glAttachShader(shaderProgram, _vertexID);
-  glAttachShader(shaderProgram, _fragID);
-  // link the program
-  glLinkProgram(shaderProgram);
-
-  // check for linking errors
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &_successFlag);
-  if (!_successFlag)
-  {
-    glGetProgramInfoLog(shaderProgram, 512, NULL, _infoLog);
-    std::string errStr(_infoLog);
-    std::cout << errStr << std::endl;
-  }
-  // delete the shader, its all has been linked to the program
-  glDeleteShader(_vertexID);
-  glDeleteShader(_fragID);
+  _shader.initShader(_vertexPath, _fragPath);
 }
 
 // settings

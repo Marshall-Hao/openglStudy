@@ -21,6 +21,9 @@ target_include_directories(openglStudy PRIVATE include)
 target_sources(openglStudy
         PRIVATE
         src/openGLFW.cpp
+        src/Shader.cpp
+        include/Base.h
+        include/Shader.h
    )
 
 target_link_libraries(openglStudy
