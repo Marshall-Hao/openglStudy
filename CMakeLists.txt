@@ -28,3 +28,10 @@ target_link_libraries(openglStudy
         glfw
         glad::glad
         glm::glm)
+
+# Copy the shaders to the build directory
+add_custom_target(openglStudyCopyShaders ALL
+   COMMAND ${CMAKE_COMMAND} -E copy_directory
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
+   $<TARGET_FILE_DIR:openglStudy>/shaders
+)
