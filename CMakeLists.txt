@@ -22,8 +22,11 @@ target_sources(openglStudy
         PRIVATE
         src/openGLFW.cpp
         src/Shader.cpp
+        src/ffImage.cpp
         include/Base.h
         include/Shader.h
+        include/stb_image.h
+        include/ffImage.h
    )
 
 target_link_libraries(openglStudy
@@ -37,4 +40,10 @@ add_custom_target(openglStudyCopyShaders ALL
    COMMAND ${CMAKE_COMMAND} -E copy_directory
    ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
    $<TARGET_FILE_DIR:openglStudy>/shaders
+)
+
+add_custom_target(openglStudyCopyTextures ALL
+   COMMAND ${CMAKE_COMMAND} -E copy_directory
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/textures
+   $<TARGET_FILE_DIR:openglStudy>/textures
 )

@@ -1,9 +1,15 @@
+#include <memory>
+
 #include "Base.h"
 #include "Shader.h"
+#include "ffImage.h"
 // VBO: vertex buffer object
 unsigned int VBO = 0;
 // VA0: vertex array object
 unsigned int VAO = 0;
+
+// Image
+std::unique_ptr<ffImage> _pImage = nullptr;
 
 // shader program
 Shader _shader;
@@ -82,6 +88,8 @@ void initModel()
   glBindVertexArray(0);
 }
 
+void initTexture() { _pImage = ffImage::readFromFile("textures/wall.jpg"); }
+
 void initShader(const char* _vertexPath, const char* _fragPath)
 {
   _shader.initShader(_vertexPath, _fragPath);
@@ -136,6 +144,7 @@ int main()
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   initModel();
+  initTexture();
   initShader("shaders/vertexShader.glsl", "shaders/fragmentShader.glsl");
   while (!glfwWindowShouldClose(window))
   {
