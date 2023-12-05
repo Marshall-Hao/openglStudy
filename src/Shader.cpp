@@ -89,3 +89,12 @@ void Shader::initShader(const char* _vertexPath, const char* _fragPath)
   glDeleteShader(_vertexID);
   glDeleteShader(_fragID);
 }
+
+void Shader::setMatrix(const std::string& _name, const glm::mat4& _matrix)
+{
+  // get the uniform location in the shader
+  unsigned int _matrixLoc =
+      glGetUniformLocation(m_shaderProgram, _name.c_str());
+  // set the uniform value
+  glUniformMatrix4fv(_matrixLoc, 1, GL_FALSE, glm::value_ptr(_matrix));
+}

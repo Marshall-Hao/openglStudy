@@ -12,4 +12,5 @@ class Shader
   void initShader(const char* _vertexPath, const char* _fragPath);
   inline void start() { glUseProgram(m_shaderProgram); }
   inline void end() { glUseProgram(0); }
+  void setMatrix(const std::string& _name, const glm::mat4& _matrix);
 };

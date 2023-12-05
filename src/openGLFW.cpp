@@ -15,12 +15,39 @@ std::unique_ptr<ffImage> _pImage = nullptr;
 // shader program
 Shader _shader;
 
+glm::mat4 _viewMatrix(1.0f);
+glm::mat4 _projectionMatrix(1.0f);
+
+int _width = 800;
+int _height = 600;
+
 void render()
 {
+  // render
+  // clear the buffer with a color
+  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+  // clear the last frame buffer
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  // depth test for current frame
+  glEnable(GL_DEPTH_TEST);
+  // matrix for camera
+  _viewMatrix = glm::lookAt(glm::vec3(3.0f, 3.0f, 3.0f),  // camera position
+                            glm::vec3(0.0f, 0.0f, 0.0f),  // look at
+                            glm::vec3(0.0f, 1.0f, 0.0f)   // up
+  );
+
+  _projectionMatrix = glm::perspective(
+      glm::radians(45.0f), (float)_width / (float)_height, 0.1f, 100.f);
+
   glBindTexture(GL_TEXTURE_2D, _texture);
   // alaways use shader program first, then it will be used to render,and the
   // unifrom will know where it should be
   _shader.start();
+
+  // set the texture uniform
+  _shader.setMatrix("_viewMatrix", _viewMatrix);
+  _shader.setMatrix("_projectionMatrix", _projectionMatrix);
   // time
   // pass the uniform value to the shader
 
@@ -29,8 +56,7 @@ void render()
   glBindVertexArray(VAO);
 
   // 3. draw the triangle
-  // glDrawArrays(GL_TRIANGLES, 0, 3);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
   // 4. unbind vertex array object
   _shader.end();
 }
@@ -39,17 +65,49 @@ void initModel()
 {
   // clang-format off
  float vertices[] = {
-    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,// top right
-    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,// bottom right
-   -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,// bottom left
-   -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
-};
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
-  unsigned int indices[] = {
-      0, 1, 3,
-      1, 2, 3
-  };
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+
   // clang-format on
   // create a vertex array object
   glGenVertexArrays(1, &VAO);
@@ -58,11 +116,7 @@ void initModel()
   glBindVertexArray(VAO);
 
   // EBo: element buffer object
-  unsigned int EBO = 0;
-  glGenBuffers(1, &EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
+
   // create a vertex buffer object , 1 is how many VBOs we want to generate
   // VBO is a buffer in the GPU's memory
   glGenBuffers(1, &VBO);
@@ -76,17 +130,16 @@ void initModel()
   // =0 or 1 or ...
   // (void*)0 for last parameter: the offset of where the
   // position data begins, this case is the first element of the array
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
   // enable the vertex attribute for color for layout 1, stride is 6 * sizeof
   // float , and color start at 3 * sizeof float
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                         (void*)(sizeof(float) * 3));
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void*)(sizeof(float) * 6));
   // enable the vertex attribute
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
-  glEnableVertexAttribArray(2);
+
   // unbind the buffer
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
@@ -145,7 +198,8 @@ int main()
 #endif
 
   // glfw window creation
-  GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Core", NULL, NULL);
+  GLFWwindow* window =
+      glfwCreateWindow(_width, _height, "OpenGL Core", NULL, NULL);
   if (window == NULL)
   {
     std::cout << "Failed to create GLFW window" << std::endl;
@@ -172,10 +226,6 @@ int main()
   {
     // input
     processInput(window);
-    // render
-    // clear the buffer with a color
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
 
     render();
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse,
