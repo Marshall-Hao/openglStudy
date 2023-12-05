@@ -1,6 +1,7 @@
 #include <memory>
 
 #include "Base.h"
+#include "Camera.h"
 #include "Shader.h"
 #include "ffImage.h"
 // VBO: vertex buffer object
@@ -15,7 +16,8 @@ std::unique_ptr<ffImage> _pImage = nullptr;
 // shader program
 Shader _shader;
 
-glm::mat4 _viewMatrix(1.0f);
+Camera _camera;
+
 glm::mat4 _projectionMatrix(1.0f);
 
 int _width = 800;
@@ -40,10 +42,7 @@ void render()
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
   // matrix for camera
-  _viewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f),  // camera position
-                            glm::vec3(0.0f, 0.0f, 0.0f),  // look at
-                            glm::vec3(0.0f, 1.0f, 0.0f)   // up
-  );
+  _camera.update();
 
   _projectionMatrix = glm::perspective(
       glm::radians(45.0f), (float)_width / (float)_height, 0.1f, 100.f);
@@ -63,7 +62,7 @@ void render()
 
     // set the texture uniform
     _shader.setMatrix("_modelMatrix", _modelMatrix);
-    _shader.setMatrix("_viewMatrix", _viewMatrix);
+    _shader.setMatrix("_viewMatrix", _camera.getViewMatrix());
     _shader.setMatrix("_projectionMatrix", _projectionMatrix);
     // time
     // pass the uniform value to the shader
@@ -197,6 +196,18 @@ void processInput(GLFWwindow* window)
 {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
+
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    _camera.move(CAMERA_MOVE::MOVE_FORWARD);
+
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    _camera.move(CAMERA_MOVE::MOVE_BACKWARD);
+
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    _camera.move(CAMERA_MOVE::MOVE_LEFT);
+
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    _camera.move(CAMERA_MOVE::MOVE_RIGHT);
 }
 int main()
 {
@@ -236,6 +247,11 @@ int main()
   // render loop
   glViewport(0, 0, 800, 600);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  // init camera
+  _camera.lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0, 0, -1.0f),
+                 glm::vec3(0, 1, 0));
+  _camera.setSpeed(0.08f);
 
   initModel();
   initTexture();

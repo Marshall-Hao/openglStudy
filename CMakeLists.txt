@@ -23,10 +23,12 @@ target_sources(openglStudy
         src/openGLFW.cpp
         src/Shader.cpp
         src/ffImage.cpp
+        src/Camera.cpp
         include/Base.h
         include/Shader.h
         include/stb_image.h
         include/ffImage.h
+        include/Camera.h
    )
 
 target_link_libraries(openglStudy
