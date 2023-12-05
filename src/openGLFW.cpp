@@ -209,6 +209,11 @@ void processInput(GLFWwindow* window)
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     _camera.move(CAMERA_MOVE::MOVE_RIGHT);
 }
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+  _camera.onMouseMove(xpos, ypos);
+}
 int main()
 {
   // glfw: initialize and configure
@@ -248,11 +253,14 @@ int main()
   glViewport(0, 0, 800, 600);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+  // hide the cursor and capture it
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(window, mouse_callback);
   // init camera
   _camera.lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0, 0, -1.0f),
                  glm::vec3(0, 1, 0));
   _camera.setSpeed(0.08f);
-
+  _camera.setSensitive(0.1f);
   initModel();
   initTexture();
   initShader("shaders/vertexShader.glsl", "shaders/fragmentShader.glsl");

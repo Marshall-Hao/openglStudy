@@ -21,6 +21,15 @@ class Camera
   float m_speed;
   glm::mat4 m_viewMatrix;
 
+  float m_yaw;
+  float m_pitch;
+  float m_sensitive;
+
+  // mouse
+  float m_xpos;
+  float m_ypos;
+  bool m_firstMouse;
+
  public:
   Camera()
   {
@@ -29,7 +38,13 @@ class Camera
     m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     m_speed = 0.01f;
 
+    m_pitch = 0.0f;
+    m_yaw = -90.0f;  // since -z is the front
     m_viewMatrix = glm::mat4(1.0f);
+
+    m_xpos = 0.0f;
+    m_ypos = 0.0f;
+    m_firstMouse = true;
   }
 
   ~Camera() {}
@@ -40,6 +55,11 @@ class Camera
 
   void update();
   void move(CAMERA_MOVE _mode);
+
+  void pitch(float _yOffset);
+  void yaw(float _xOffset);
+  void setSensitive(float _sensitive) { m_sensitive = _sensitive; }
+  void onMouseMove(double _xpos, double _ypos);
 };
 
 #endif
