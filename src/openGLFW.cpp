@@ -31,8 +31,16 @@ void render()
 
   // depth test for current frame
   glEnable(GL_DEPTH_TEST);
+
+  // translation set
+  glm::vec3 modelVecs[] = {
+      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
+      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
   // matrix for camera
-  _viewMatrix = glm::lookAt(glm::vec3(3.0f, 3.0f, 3.0f),  // camera position
+  _viewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f),  // camera position
                             glm::vec3(0.0f, 0.0f, 0.0f),  // look at
                             glm::vec3(0.0f, 1.0f, 0.0f)   // up
   );
@@ -43,22 +51,32 @@ void render()
   glBindTexture(GL_TEXTURE_2D, _texture);
   // alaways use shader program first, then it will be used to render,and the
   // unifrom will know where it should be
-  _shader.start();
+  for (int i = 0; i < 10; i++)
+  {
+    glm::mat4 _modelMatrix(1.0f);
+    _modelMatrix = glm::translate(_modelMatrix, modelVecs[i]);
+    _modelMatrix = glm::rotate(
+        _modelMatrix, glm::radians((float)glfwGetTime() * (i + 1) * 10),
+        glm::vec3(0.0f, 1.0f, 0.0f));
+    // start the current program
+    _shader.start();
 
-  // set the texture uniform
-  _shader.setMatrix("_viewMatrix", _viewMatrix);
-  _shader.setMatrix("_projectionMatrix", _projectionMatrix);
-  // time
-  // pass the uniform value to the shader
+    // set the texture uniform
+    _shader.setMatrix("_modelMatrix", _modelMatrix);
+    _shader.setMatrix("_viewMatrix", _viewMatrix);
+    _shader.setMatrix("_projectionMatrix", _projectionMatrix);
+    // time
+    // pass the uniform value to the shader
 
-  // draw our first triangle
-  // 1. bind vertex array object
-  glBindVertexArray(VAO);
+    // draw our first triangle
+    // 1. bind vertex array object
+    glBindVertexArray(VAO);
 
-  // 3. draw the triangle
-  glDrawArrays(GL_TRIANGLES, 0, 36);
-  // 4. unbind vertex array object
-  _shader.end();
+    // 3. draw the triangle
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    // end the program
+    _shader.end();
+  }
 }
 
 void initModel()
