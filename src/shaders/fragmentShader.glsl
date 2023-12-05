@@ -7,6 +7,7 @@ in vec2 outUV;
 uniform sampler2D tex;
 
 void main()
-{
-    FragColor = texture(tex, outUV);
+{   
+    vec4  sunlight = vec4(1.0,1.0,1.0, 1.0) * 0.3;
+    FragColor = texture(tex, outUV) * sunlight;
 }

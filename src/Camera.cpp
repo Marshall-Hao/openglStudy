@@ -52,8 +52,9 @@ void Camera::pitch(float _yOffset)
 
   // always the direction
   m_front = glm::normalize(m_front);
-  std::cout << "m_front: " << m_front.x << " " << m_front.y << " " << m_front.z
-            << std::endl;
+  // std::cout << "m_front: " << m_front.x << " " << m_front.y << " " <<
+  // m_front.z
+  //           << std::endl;
   // update();
 }
 
@@ -67,8 +68,9 @@ void Camera::yaw(float _xOffset)
   m_front.z = cos(glm::radians(m_pitch)) * sin(glm::radians(m_yaw));
 
   m_front = glm::normalize(m_front);
-  std::cout << "m_front: " << m_front.x << " " << m_front.y << " " << m_front.z
-            << std::endl;
+  // std::cout << "m_front: " << m_front.x << " " << m_front.y << " " <<
+  // m_front.z
+  //           << std::endl;
   // update();
 }
 

@@ -4,17 +4,18 @@
 #include "Camera.h"
 #include "Shader.h"
 #include "ffImage.h"
-// VBO: vertex buffer object
-unsigned int VBO = 0;
+
 // VA0: vertex array object
-unsigned int VAO = 0;
+uint VAO_cube = 0;
+uint VAO_sun = 0;
 // texture Id
-unsigned int _texture = 0;
+uint _texture = 0;
 // Image
 std::unique_ptr<ffImage> _pImage = nullptr;
 
 // shader program
-Shader _shader;
+Shader _shaderCube;
+Shader _shaderSun;
 
 Camera _camera;
 
@@ -35,12 +36,7 @@ void render()
   glEnable(GL_DEPTH_TEST);
 
   // translation set
-  glm::vec3 modelVecs[] = {
-      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
-      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
-      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
-      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
-      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
+
   // matrix for camera
   _camera.update();
 
@@ -50,36 +46,35 @@ void render()
   glBindTexture(GL_TEXTURE_2D, _texture);
   // alaways use shader program first, then it will be used to render,and the
   // unifrom will know where it should be
-  for (int i = 0; i < 10; i++)
-  {
-    glm::mat4 _modelMatrix(1.0f);
-    _modelMatrix = glm::translate(_modelMatrix, modelVecs[i]);
-    _modelMatrix = glm::rotate(
-        _modelMatrix, glm::radians((float)glfwGetTime() * (i + 1) * 10),
-        glm::vec3(0.0f, 1.0f, 0.0f));
-    // start the current program
-    _shader.start();
 
-    // set the texture uniform
-    _shader.setMatrix("_modelMatrix", _modelMatrix);
-    _shader.setMatrix("_viewMatrix", _camera.getViewMatrix());
-    _shader.setMatrix("_projectionMatrix", _projectionMatrix);
-    // time
-    // pass the uniform value to the shader
+  glm::mat4 _modelMatrix(1.0f);
+  _modelMatrix = glm::translate(_modelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
-    // draw our first triangle
-    // 1. bind vertex array object
-    glBindVertexArray(VAO);
+  // Render the cube
+  _shaderCube.start();
+  _shaderCube.setMatrix("_modelMatrix", _modelMatrix);
+  _shaderCube.setMatrix("_viewMatrix", _camera.getViewMatrix());
+  _shaderCube.setMatrix("_projectionMatrix", _projectionMatrix);
+  glBindVertexArray(VAO_cube);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
+  _shaderCube.end();
 
-    // 3. draw the triangle
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    // end the program
-    _shader.end();
-  }
+  // Render the sun
+  _shaderSun.start();
+  _modelMatrix = glm::translate(_modelMatrix, glm::vec3(3.0f, 0.0f, -3.0f));
+
+  _shaderSun.setMatrix("_modelMatrix", _modelMatrix);
+  _shaderSun.setMatrix("_viewMatrix", _camera.getViewMatrix());
+  _shaderSun.setMatrix("_projectionMatrix", _projectionMatrix);
+  glBindVertexArray(VAO_sun);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
+  _shaderSun.end();
 }
 
-void initModel()
+uint createModel()
 {
+  uint _vao = 0;
+  uint _vbo = 0;
   // clang-format off
  float vertices[] = {
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -127,18 +122,18 @@ void initModel()
 
   // clang-format on
   // create a vertex array object
-  glGenVertexArrays(1, &VAO);
+  glGenVertexArrays(1, &_vao);
   // bind the vertex array object
   // VAO include the VBO and the vertex attribute
-  glBindVertexArray(VAO);
+  glBindVertexArray(_vao);
 
   // EBo: element buffer object
 
   // create a vertex buffer object , 1 is how many VBOs we want to generate
   // VBO is a buffer in the GPU's memory
-  glGenBuffers(1, &VBO);
+  glGenBuffers(1, &_vbo);
   // bind the buffer to the GL_ARRAY_BUFFER target
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo);
   // copy the vertices data into the buffer's memory
   // GL_STATIC_DRAW: the data will most likely not change at all or very rarely.
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -160,6 +155,8 @@ void initModel()
   // unbind the buffer
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
+
+  return _vao;
 }
 
 void initTexture()
@@ -182,9 +179,9 @@ void initTexture()
                _pImage->getData());
 }
 
-void initShader(const char* _vertexPath, const char* _fragPath)
+void initShader(Shader* _shader, const char* _vertexPath, const char* _fragPath)
 {
-  _shader.initShader(_vertexPath, _fragPath);
+  _shader->initShader(_vertexPath, _fragPath);
 }
 
 // settings
@@ -261,9 +258,12 @@ int main()
                  glm::vec3(0, 1, 0));
   _camera.setSpeed(0.08f);
   _camera.setSensitive(0.1f);
-  initModel();
+  VAO_cube = createModel();
+  VAO_sun = createModel();
   initTexture();
-  initShader("shaders/vertexShader.glsl", "shaders/fragmentShader.glsl");
+  initShader(&_shaderCube, "shaders/vertexShader.glsl",
+             "shaders/fragmentShader.glsl");
+  initShader(&_shaderSun, "shaders/sunVertex.glsl", "shaders/sunFragment.glsl");
   while (!glfwWindowShouldClose(window))
   {
     // input
