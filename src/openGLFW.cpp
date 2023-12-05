@@ -8,6 +8,9 @@
 // VA0: vertex array object
 uint VAO_cube = 0;
 uint VAO_sun = 0;
+glm::vec3 light_pos(1.0f);
+glm::vec3 light_color(1.0f);
+float ambient_strength = 0.1f;
 // texture Id
 uint _texture = 0;
 // Image
@@ -52,6 +55,8 @@ void render()
 
   // Render the cube
   _shaderCube.start();
+  _shaderCube.setVec3("_lightColor", light_color);
+  _shaderCube.setFloat("_ambientStrength", ambient_strength);
   _shaderCube.setMatrix("_modelMatrix", _modelMatrix);
   _shaderCube.setMatrix("_viewMatrix", _camera.getViewMatrix());
   _shaderCube.setMatrix("_projectionMatrix", _projectionMatrix);
@@ -61,7 +66,8 @@ void render()
 
   // Render the sun
   _shaderSun.start();
-  _modelMatrix = glm::translate(_modelMatrix, glm::vec3(3.0f, 0.0f, -3.0f));
+  _modelMatrix = glm::mat4(1.0f);
+  _modelMatrix = glm::translate(_modelMatrix, light_pos);
 
   _shaderSun.setMatrix("_modelMatrix", _modelMatrix);
   _shaderSun.setMatrix("_viewMatrix", _camera.getViewMatrix());
@@ -260,6 +266,9 @@ int main()
   _camera.setSensitive(0.1f);
   VAO_cube = createModel();
   VAO_sun = createModel();
+  light_pos = glm::vec3(3.0f, 0.0f, -1.0f);
+  light_color = glm::vec3(1.0f, 1.0f, 1.0f);
+
   initTexture();
   initShader(&_shaderCube, "shaders/vertexShader.glsl",
              "shaders/fragmentShader.glsl");
