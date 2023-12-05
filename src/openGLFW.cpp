@@ -7,7 +7,8 @@
 unsigned int VBO = 0;
 // VA0: vertex array object
 unsigned int VAO = 0;
-
+// texture Id
+unsigned int _texture = 0;
 // Image
 std::unique_ptr<ffImage> _pImage = nullptr;
 
@@ -16,6 +17,7 @@ Shader _shader;
 
 void render()
 {
+  glBindTexture(GL_TEXTURE_2D, _texture);
   // alaways use shader program first, then it will be used to render,and the
   // unifrom will know where it should be
   _shader.start();
@@ -37,10 +39,10 @@ void initModel()
 {
   // clang-format off
  float vertices[] = {
-    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // top right
-    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
-   -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom left
-   -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
+    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,// top right
+    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,// bottom right
+   -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,// bottom left
+   -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
 };
 
 
@@ -74,21 +76,41 @@ void initModel()
   // =0 or 1 or ...
   // (void*)0 for last parameter: the offset of where the
   // position data begins, this case is the first element of the array
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
   // enable the vertex attribute for color for layout 1, stride is 6 * sizeof
   // float , and color start at 3 * sizeof float
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                         (void*)(sizeof(float) * 3));
-
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                        (void*)(sizeof(float) * 6));
   // enable the vertex attribute
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
   // unbind the buffer
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 }
 
-void initTexture() { _pImage = ffImage::readFromFile("textures/wall.jpg"); }
+void initTexture()
+{
+  _pImage = ffImage::readFromFile("textures/wall.jpg");
+  // create a texture
+  glGenTextures(1, &_texture);
+  // bind the texture
+  glBindTexture(GL_TEXTURE_2D, _texture);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  // load image, create texture and generate mipmaps
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _pImage->getWidth(),
+               _pImage->getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+               _pImage->getData());
+}
 
 void initShader(const char* _vertexPath, const char* _fragPath)
 {
