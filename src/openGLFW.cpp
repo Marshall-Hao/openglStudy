@@ -4,6 +4,7 @@
 unsigned int VBO = 0;
 // VA0: vertex array object
 unsigned int VAO = 0;
+
 // shader program
 Shader _shader;
 
@@ -20,7 +21,8 @@ void render()
   glBindVertexArray(VAO);
 
   // 3. draw the triangle
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  // glDrawArrays(GL_TRIANGLES, 0, 3);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
   // 4. unbind vertex array object
   _shader.end();
 }
@@ -28,19 +30,31 @@ void render()
 void initModel()
 {
   // clang-format off
-  float vertices[] = {
-      -0.5f, -0.5f, 0.0f, 1.0f , 0.0f, 0.0f,// left
-      0.5f,  -0.5f, 0.0f, 0.0f , 1.0f, 0.0f,// right
-      0.0f,  0.5f,  0.0f, 0.0f , 0.0f, 1.0f // top
+ float vertices[] = {
+    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // top right
+    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
+   -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom left
+   -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f  // top left
+};
+
+
+  unsigned int indices[] = {
+      0, 1, 3,
+      1, 2, 3
   };
   // clang-format on
-
   // create a vertex array object
   glGenVertexArrays(1, &VAO);
   // bind the vertex array object
   // VAO include the VBO and the vertex attribute
   glBindVertexArray(VAO);
 
+  // EBo: element buffer object
+  unsigned int EBO = 0;
+  glGenBuffers(1, &EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
   // create a vertex buffer object , 1 is how many VBOs we want to generate
   // VBO is a buffer in the GPU's memory
   glGenBuffers(1, &VBO);
