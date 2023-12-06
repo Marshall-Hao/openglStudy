@@ -13,8 +13,10 @@ uint VAO_sun = 0;
 glm::vec3 light_pos(1.0f);
 glm::vec3 light_color(1.0f);
 
-// texture Id
-uint _texture = 0;
+// texture
+uint _textureBox = 0;
+uint _textureSpec = 0;
+
 // Image
 std::unique_ptr<ffImage> _pImage = nullptr;
 
@@ -48,7 +50,12 @@ void render()
   _projectionMatrix = glm::perspective(
       glm::radians(45.0f), (float)_width / (float)_height, 0.1f, 100.f);
 
-  glBindTexture(GL_TEXTURE_2D, _texture);
+  // bind texture
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, _textureBox);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, _textureSpec);
+
   // alaways use shader program first, then it will be used to render,and the
   // unifrom will know where it should be
 
@@ -59,16 +66,14 @@ void render()
   _shaderCube.start();
   _shaderCube.setVec3("_viewPos", _camera.getPosition());
   // light properties
-  light_color = glm::vec3(glfwGetTime() * 0.8f, sin(glfwGetTime() * 0.5f),
-                          cos(glfwGetTime() * 0.7f));
+
   _shaderCube.setVec3("myLight.m_ambient", light_color * glm::vec3(0.1f));
   _shaderCube.setVec3("myLight.m_diffuse", light_color * glm::vec3(0.7f));
   _shaderCube.setVec3("myLight.m_specular", light_color * glm::vec3(0.5f));
   _shaderCube.setVec3("myLight.m_position", light_pos);
   // material properties
-  _shaderCube.setVec3("myMaterial.m_ambient", glm::vec3(0.1f));
-  _shaderCube.setVec3("myMaterial.m_diffuse", glm::vec3(0.7f));
-  _shaderCube.setVec3("myMaterial.m_specular", glm::vec3(0.8f));
+  // set the sampler2D to the correct texture unit 1 GL_TEXTURE1
+  _shaderCube.setInt("myMaterial.m_specular", 1);
   _shaderCube.setFloat("myMaterial.m_shininess", 32.0f);
   // transform
   _shaderCube.setMatrix("_modelMatrix", _modelMatrix);
@@ -183,9 +188,10 @@ uint createModel()
   return _vao;
 }
 
-void initTexture()
+uint createTexture(const char* _fileName)
 {
-  _pImage = ffImage::readFromFile("textures/wall.jpg");
+  _pImage = ffImage::readFromFile(_fileName);
+  uint _texture = 0;
   // create a texture
   glGenTextures(1, &_texture);
   // bind the texture
@@ -201,6 +207,8 @@ void initTexture()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _pImage->getWidth(),
                _pImage->getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
                _pImage->getData());
+
+  return _texture;
 }
 
 void initShader(Shader* _shader, const char* _vertexPath, const char* _fragPath)
@@ -284,10 +292,11 @@ int main()
   _camera.setSensitive(0.1f);
   VAO_cube = createModel();
   VAO_sun = createModel();
-  light_pos = glm::vec3(3.0f, 0.0f, -1.0f);
+  light_pos = glm::vec3(3.0f, 1.0f, -1.0f);
   light_color = glm::vec3(1.0f, 1.0f, 1.0f);
 
-  initTexture();
+  _textureBox = createTexture("textures/box.png");
+  _textureSpec = createTexture("textures/specular.png");
   initShader(&_shaderCube, "shaders/vertexShader.glsl",
              "shaders/fragmentShader.glsl");
   initShader(&_shaderSun, "shaders/sunVertex.glsl", "shaders/sunFragment.glsl");

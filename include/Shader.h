@@ -15,4 +15,5 @@ class Shader
   void setMatrix(const std::string& _name, const glm::mat4& _matrix);
   void setVec3(const std::string& _name, const glm::vec3& _vec);
   void setFloat(const std::string& _name, float _value);
+  void setInt(const std::string& _name, int _value);
 };

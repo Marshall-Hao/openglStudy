@@ -11,9 +11,8 @@ uniform vec3 _viewPos;
 
 struct Material
 {
- vec3 m_amibent;
- vec3 m_diffuse;
- vec3 m_specular;
+ sampler2D m_diffuse;
+ sampler2D m_specular;
 
  float m_shininess;
 };
@@ -32,7 +31,7 @@ uniform Light myLight;
 void main()
 {   
     // ambient
-    vec3 _ambient = myLight.m_ambient * myMaterial.m_amibent;
+    vec3 _ambient = myLight.m_ambient * vec3(texture(myMaterial.m_diffuse, outUV)) ;
     // diffuse
     // normal line direction
     vec3 _normal = normalize(outNormal);
@@ -41,7 +40,7 @@ void main()
     // cos theta between normal and light
     float _diff = max(dot(_normal, _lightDir), 0.0);
     // get the diffuse light ,on the x direction costheta
-    vec3 _diffuse = myLight.m_diffuse * _diff * myMaterial.m_diffuse;
+    vec3 _diffuse = myLight.m_diffuse * _diff * vec3(texture(myMaterial.m_diffuse, outUV));
 
  
     // reflect line direction
@@ -51,7 +50,7 @@ void main()
     vec3 _reflectDir = reflect(-_lightDir, _normal);
     // cos alpha between reflect and view
     float _spec = pow(max(dot(_viewDir, _reflectDir), 0.0), myMaterial.m_shininess);
-    vec3 _specular = myLight.m_specular * _spec * myMaterial.m_specular;
+    vec3 _specular = myLight.m_specular * _spec * vec3(texture(myMaterial.m_specular, outUV));
 
     vec3 result = _ambient + _diffuse +  _specular;
     FragColor = texture(tex, outUV) * vec4(result,1.0);
