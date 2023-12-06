@@ -23,6 +23,10 @@ std::unique_ptr<ffImage> _pImage = nullptr;
 // shader program
 Shader _shaderCube;
 Shader _shaderSun;
+// parallel light
+Shader _shaderDir;
+// point light
+Shader _shaderPoint;
 
 Camera _camera;
 
@@ -43,7 +47,12 @@ void render()
   glEnable(GL_DEPTH_TEST);
 
   // translation set
-
+  glm::vec3 cubePositions[] = {
+      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
+      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
   // matrix for camera
   _camera.update();
 
@@ -63,25 +72,38 @@ void render()
   _modelMatrix = glm::translate(_modelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
   // Render the cube
-  _shaderCube.start();
-  _shaderCube.setVec3("_viewPos", _camera.getPosition());
+  _shaderPoint.start();
+  _shaderPoint.setVec3("_viewPos", _camera.getPosition());
   // light properties
 
-  _shaderCube.setVec3("myLight.m_ambient", light_color * glm::vec3(0.1f));
-  _shaderCube.setVec3("myLight.m_diffuse", light_color * glm::vec3(0.7f));
-  _shaderCube.setVec3("myLight.m_specular", light_color * glm::vec3(0.5f));
-  _shaderCube.setVec3("myLight.m_position", light_pos);
+  _shaderPoint.setVec3("myLight.m_ambient", light_color * glm::vec3(0.1f));
+  _shaderPoint.setVec3("myLight.m_diffuse", light_color * glm::vec3(0.7f));
+  _shaderPoint.setVec3("myLight.m_specular", light_color * glm::vec3(0.5f));
+  _shaderPoint.setVec3("myLight.m_position", light_pos);
+
+  _shaderPoint.setFloat("myLight.m_constant", 1.0f);
+  _shaderPoint.setFloat("myLight.m_linear", 0.09f);
+  _shaderPoint.setFloat("myLight.m_quadratic", 0.032f);
   // material properties
   // set the sampler2D to the correct texture unit 1 GL_TEXTURE1
-  _shaderCube.setInt("myMaterial.m_specular", 1);
-  _shaderCube.setFloat("myMaterial.m_shininess", 32.0f);
+  _shaderPoint.setInt("myMaterial.m_specular", 1);
+  _shaderPoint.setFloat("myMaterial.m_shininess", 32.0f);
   // transform
-  _shaderCube.setMatrix("_modelMatrix", _modelMatrix);
-  _shaderCube.setMatrix("_viewMatrix", _camera.getViewMatrix());
-  _shaderCube.setMatrix("_projectionMatrix", _projectionMatrix);
-  glBindVertexArray(VAO_cube);
-  glDrawArrays(GL_TRIANGLES, 0, 36);
-  _shaderCube.end();
+  _shaderPoint.setMatrix("_viewMatrix", _camera.getViewMatrix());
+  _shaderPoint.setMatrix("_projectionMatrix", _projectionMatrix);
+
+  for (int i = 0; i < 10; i++)
+  {
+    _modelMatrix = glm::mat4(1.0f);
+    _modelMatrix = glm::translate(_modelMatrix, cubePositions[i]);
+    _modelMatrix = glm::rotate(_modelMatrix, glm::radians(20.0f * i),
+                               glm::vec3(0.0f, 1.0f, 0.0f));
+    _shaderPoint.setMatrix("_modelMatrix", _modelMatrix);
+
+    glBindVertexArray(VAO_cube);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+  }
+  _shaderPoint.end();
 
   // Render the sun
   _shaderSun.start();
@@ -300,6 +322,9 @@ int main()
   initShader(&_shaderCube, "shaders/vertexShader.glsl",
              "shaders/fragmentShader.glsl");
   initShader(&_shaderSun, "shaders/sunVertex.glsl", "shaders/sunFragment.glsl");
+  initShader(&_shaderDir, "shaders/dirVertex.glsl", "shaders/dirFragment.glsl");
+  initShader(&_shaderPoint, "shaders/pointVertex.glsl",
+             "shaders/pointFragment.glsl");
   while (!glfwWindowShouldClose(window))
   {
     // input
