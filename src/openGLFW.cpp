@@ -8,9 +8,12 @@
 // VA0: vertex array object
 uint VAO_cube = 0;
 uint VAO_sun = 0;
+
+// light
 glm::vec3 light_pos(1.0f);
 glm::vec3 light_color(1.0f);
 float ambient_strength = 0.1f;
+
 // texture Id
 uint _texture = 0;
 // Image
@@ -58,6 +61,7 @@ void render()
   _shaderCube.setVec3("_lightColor", light_color);
   _shaderCube.setFloat("_ambientStrength", ambient_strength);
   _shaderCube.setVec3("_lightPos", light_pos);
+  _shaderCube.setVec3("_viewPos", _camera.getPosition());
   _shaderCube.setMatrix("_modelMatrix", _modelMatrix);
   _shaderCube.setMatrix("_viewMatrix", _camera.getViewMatrix());
   _shaderCube.setMatrix("_projectionMatrix", _projectionMatrix);
@@ -258,11 +262,11 @@ int main()
   }
 
   // render loop
-  glViewport(0, 0, 800, 600);
+  glViewport(200, 150, 1600, 1200);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   // hide the cursor and capture it
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
   // init camera
   _camera.lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0, 0, -1.0f),
