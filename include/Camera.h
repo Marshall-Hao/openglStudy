@@ -51,6 +51,7 @@ class Camera
   void setSpeed(float _speed) { m_speed = _speed; }
   glm::mat4 getViewMatrix() const { return m_viewMatrix; }
   glm::vec3 getPosition() const { return m_position; }
+  glm::vec3 getFront() const { return m_front; }
   void lookAt(const glm::vec3& _position, const glm::vec3& _front,
               const glm::vec3& _up);
 

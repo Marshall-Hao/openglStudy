@@ -27,6 +27,8 @@ Shader _shaderSun;
 Shader _shaderDir;
 // point light
 Shader _shaderPoint;
+// spot light
+Shader _shaderSpot;
 
 Camera _camera;
 
@@ -72,25 +74,26 @@ void render()
   _modelMatrix = glm::translate(_modelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
   // Render the cube
-  _shaderPoint.start();
-  _shaderPoint.setVec3("_viewPos", _camera.getPosition());
+  _shaderSpot.start();
+  _shaderSpot.setVec3("_viewPos", _camera.getPosition());
   // light properties
 
-  _shaderPoint.setVec3("myLight.m_ambient", light_color * glm::vec3(0.1f));
-  _shaderPoint.setVec3("myLight.m_diffuse", light_color * glm::vec3(0.7f));
-  _shaderPoint.setVec3("myLight.m_specular", light_color * glm::vec3(0.5f));
-  _shaderPoint.setVec3("myLight.m_position", light_pos);
+  _shaderSpot.setVec3("myLight.m_ambient", light_color * glm::vec3(0.1f));
+  _shaderSpot.setVec3("myLight.m_diffuse", light_color * glm::vec3(0.7f));
+  _shaderSpot.setVec3("myLight.m_specular", light_color * glm::vec3(0.5f));
+  // spot light sames as camera position and direction
+  _shaderSpot.setVec3("myLight.m_position", _camera.getPosition());
+  _shaderSpot.setVec3("myLight.m_direction", _camera.getFront());
 
-  _shaderPoint.setFloat("myLight.m_constant", 1.0f);
-  _shaderPoint.setFloat("myLight.m_linear", 0.09f);
-  _shaderPoint.setFloat("myLight.m_quadratic", 0.032f);
+  _shaderSpot.setFloat("myLight.m_cutOff", glm::cos(glm::radians(12.5f)));
+
   // material properties
   // set the sampler2D to the correct texture unit 1 GL_TEXTURE1
-  _shaderPoint.setInt("myMaterial.m_specular", 1);
-  _shaderPoint.setFloat("myMaterial.m_shininess", 32.0f);
+  _shaderSpot.setInt("myMaterial.m_specular", 1);
+  _shaderSpot.setFloat("myMaterial.m_shininess", 32.0f);
   // transform
-  _shaderPoint.setMatrix("_viewMatrix", _camera.getViewMatrix());
-  _shaderPoint.setMatrix("_projectionMatrix", _projectionMatrix);
+  _shaderSpot.setMatrix("_viewMatrix", _camera.getViewMatrix());
+  _shaderSpot.setMatrix("_projectionMatrix", _projectionMatrix);
 
   for (int i = 0; i < 10; i++)
   {
@@ -98,12 +101,12 @@ void render()
     _modelMatrix = glm::translate(_modelMatrix, cubePositions[i]);
     _modelMatrix = glm::rotate(_modelMatrix, glm::radians(20.0f * i),
                                glm::vec3(0.0f, 1.0f, 0.0f));
-    _shaderPoint.setMatrix("_modelMatrix", _modelMatrix);
+    _shaderSpot.setMatrix("_modelMatrix", _modelMatrix);
 
     glBindVertexArray(VAO_cube);
     glDrawArrays(GL_TRIANGLES, 0, 36);
   }
-  _shaderPoint.end();
+  _shaderSpot.end();
 
   // Render the sun
   _shaderSun.start();
@@ -325,6 +328,8 @@ int main()
   initShader(&_shaderDir, "shaders/dirVertex.glsl", "shaders/dirFragment.glsl");
   initShader(&_shaderPoint, "shaders/pointVertex.glsl",
              "shaders/pointFragment.glsl");
+  initShader(&_shaderSpot, "shaders/spotVertex.glsl",
+             "shaders/spotFragment.glsl");
   while (!glfwWindowShouldClose(window))
   {
     // input
