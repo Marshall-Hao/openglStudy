@@ -41,7 +41,7 @@ void render()
 {
   // render
   // clear the buffer with a color
-  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   // clear the last frame buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -86,7 +86,11 @@ void render()
   _shaderSpot.setVec3("myLight.m_direction", _camera.getFront());
 
   _shaderSpot.setFloat("myLight.m_cutOff", glm::cos(glm::radians(12.5f)));
+  _shaderSpot.setFloat("myLight.m_outerCutOff", glm::cos(glm::radians(20.5f)));
 
+  _shaderSpot.setFloat("myLight.m_constant", 1.0f);
+  _shaderSpot.setFloat("myLight.m_linear", 0.09f);
+  _shaderSpot.setFloat("myLight.m_quadratic", 0.032f);
   // material properties
   // set the sampler2D to the correct texture unit 1 GL_TEXTURE1
   _shaderSpot.setInt("myMaterial.m_specular", 1);
