@@ -31,6 +31,8 @@ Shader _shaderPoint;
 Shader _shaderSpot;
 // scene
 Shader _shaderScene;
+// edge
+Shader _shaderEdge;
 
 Camera _camera;
 
@@ -42,13 +44,15 @@ int _height = 600;
 void render()
 {
   // render
+  // depth test for current frame
+  glEnable(GL_DEPTH_TEST);
+  // stencil test
+  glEnable(GL_STENCIL_TEST);
+  glStencilMask(0xFF);
   // clear the buffer with a color
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   // clear the last frame buffer
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  // depth test for current frame
-  glEnable(GL_DEPTH_TEST);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
   // translation set
   glm::vec3 cubePositions[] = {
@@ -157,6 +161,13 @@ void render()
   _shaderScene.setFloat("mySpotLight.m_outerCutOff",
                         glm::cos(glm::radians(15.0f)));
 
+  //  set the rule for stencil test, always pass the stencil test
+  glStencilFunc(GL_ALWAYS, 1, 0xFF);
+  // all the fragments pass the stencil test, set the stencil buffer to 1
+  glStencilMask(0xFF);
+  // set the stencil drawing to replace the stencil buffer if pass the stencil
+  // and depth test
+  glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
   for (int i = 0; i < 10; i++)
   {
     _modelMatrix = glm::mat4(1.0f);
@@ -170,6 +181,30 @@ void render()
   }
   _shaderScene.end();
 
+  // set the pass rule for stencil test, only pass the stencil test when not eq
+  // to 1
+  glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+  // disable the stencil writing
+  glStencilMask(0x00);
+  // draw the edge of the cube
+  _shaderEdge.start();
+  _shaderEdge.setMatrix("_viewMatrix", _camera.getViewMatrix());
+  _shaderEdge.setMatrix("_projectionMatrix", _projectionMatrix);
+  for (int i = 0; i < 10; i++)
+  {
+    _modelMatrix = glm::mat4(1.0f);
+    _modelMatrix = glm::translate(_modelMatrix, cubePositions[i]);
+    _modelMatrix = glm::rotate(_modelMatrix, glm::radians(20.0f * i),
+                               glm::vec3(0.0f, 1.0f, 0.0f));
+    _modelMatrix = glm::scale(_modelMatrix, glm::vec3(1.05f));
+    _shaderEdge.setMatrix("_modelMatrix", _modelMatrix);
+
+    glBindVertexArray(VAO_cube);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+  }
+  _shaderEdge.end();
+
+  glStencilFunc(GL_ALWAYS, 1, 0xFF);
   // Render the sun
   _shaderSun.start();
   _shaderSun.setMatrix("_viewMatrix", _camera.getViewMatrix());
@@ -397,6 +432,8 @@ int main()
              "shaders/spotFragment.glsl");
   initShader(&_shaderScene, "shaders/sceneLightVertex.glsl",
              "shaders/sceneLightFragment.glsl");
+  initShader(&_shaderEdge, "shaders/edgeVertex.glsl",
+             "shaders/edgeFragment.glsl");
   while (!glfwWindowShouldClose(window))
   {
     // input
