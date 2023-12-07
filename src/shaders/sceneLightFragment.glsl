@@ -99,16 +99,24 @@ vec3 calcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos) {
 vec3 calcSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos) {
   // direction is from the light to the fragment(points lerp value) , tail to
   // head b -a = ab a-> b
-  vec3 _lightDir = normalize(light.m_position - outFragPos);
-
+  vec3 _lightDir = normalize(fragPos - light.m_position);
   vec3 _spotDir = normalize(light.m_direction);
-  float _cosTheta = dot(_lightDir, -_spotDir);
+  float _cosTheta = dot(_lightDir, _spotDir);
 
-  // epsilon is the angle between the light cut off and the light outter cut off
+  // eplison
   float _epsilon = light.m_cutOff - light.m_outerCutOff;
-  // intensity is the light intensity corresponding to the angle and epsilon
-  float _intensity =
-      clamp((_cosTheta - light.m_outerCutOff) / _epsilon, 0.0, 1.0);
+
+  // intensity
+  float intersity =
+      clamp((_cosTheta - light.m_outerCutOff) / _epsilon, 0.0f, 1.0f);
+
+  // attenuation
+  float attenuation =
+      1.0 /
+      (light.m_constant +
+       light.m_linear * length(light.m_position - outFragPos) +
+       light.m_quadratic * pow(length(light.m_position - outFragPos), 2.0));
+
   // ambient
   vec3 _ambient = light.m_ambient * vec3(texture(myMaterial.m_diffuse, outUV));
   // diffuse
@@ -117,11 +125,9 @@ vec3 calcSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos) {
       light.m_diffuse * _diff * vec3(texture(myMaterial.m_diffuse, outUV));
 
   // specular
-  // reflect line direction
-  vec3 _reflectDir = reflect(-_lightDir, normal);
-  // cos alpha between reflect and view
+  vec3 _reflectDir = reflect(_lightDir, normal);
   float _spec =
-      pow(max(dot(viewDir, _reflectDir), 0.0), myMaterial.m_shininess);
+      pow(max(dot(_reflectDir, viewDir), 0.0f), myMaterial.m_shininess);
   vec3 _specular =
       light.m_specular * _spec * vec3(texture(myMaterial.m_specular, outUV));
 
@@ -130,7 +136,8 @@ vec3 calcSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 fragPos) {
   float _attenuation = 1.0f / (light.m_constant + light.m_linear * _distance +
                                light.m_quadratic * _distance * _distance);
 
-  return _intensity * _attenuation * (_ambient + _diffuse + _specular);
+  return _attenuation *
+         (_ambient + intersity * _diffuse + intersity * _specular);
 }
 
 #define MAX_POINT_LIGHTS 4

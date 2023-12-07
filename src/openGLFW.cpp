@@ -29,6 +29,8 @@ Shader _shaderDir;
 Shader _shaderPoint;
 // spot light
 Shader _shaderSpot;
+// scene
+Shader _shaderScene;
 
 Camera _camera;
 
@@ -80,30 +82,80 @@ void render()
   _modelMatrix = glm::translate(_modelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
   // Render the cube
-  _shaderSpot.start();
-  _shaderSpot.setVec3("_viewPos", _camera.getPosition());
-  // light properties
+  _shaderScene.start();
+  _shaderScene.setVec3("_viewPos", _camera.getPosition());
 
-  _shaderSpot.setVec3("myLight.m_ambient", light_color * glm::vec3(0.1f));
-  _shaderSpot.setVec3("myLight.m_diffuse", light_color * glm::vec3(0.7f));
-  _shaderSpot.setVec3("myLight.m_specular", light_color * glm::vec3(0.5f));
-  // spot light sames as camera position and direction
-  _shaderSpot.setVec3("myLight.m_position", _camera.getPosition());
-  _shaderSpot.setVec3("myLight.m_direction", _camera.getFront());
-
-  _shaderSpot.setFloat("myLight.m_cutOff", glm::cos(glm::radians(12.5f)));
-  _shaderSpot.setFloat("myLight.m_outerCutOff", glm::cos(glm::radians(20.5f)));
-
-  _shaderSpot.setFloat("myLight.m_constant", 1.0f);
-  _shaderSpot.setFloat("myLight.m_linear", 0.09f);
-  _shaderSpot.setFloat("myLight.m_quadratic", 0.032f);
   // material properties
   // set the sampler2D to the correct texture unit 1 GL_TEXTURE1
-  _shaderSpot.setInt("myMaterial.m_specular", 1);
-  _shaderSpot.setFloat("myMaterial.m_shininess", 32.0f);
+  _shaderScene.setInt("myMaterial.m_specular", 1);
+  _shaderScene.setFloat("myMaterial.m_shininess", 32.0f);
   // transform
-  _shaderSpot.setMatrix("_viewMatrix", _camera.getViewMatrix());
-  _shaderSpot.setMatrix("_projectionMatrix", _projectionMatrix);
+  _shaderScene.setMatrix("_viewMatrix", _camera.getViewMatrix());
+  _shaderScene.setMatrix("_projectionMatrix", _projectionMatrix);
+
+  // light properties
+  // directional light
+  _shaderScene.setVec3("myDirLight.m_direction",
+                       glm::vec3(-0.2f, -1.0f, -0.3f));
+  _shaderScene.setVec3("myDirLight.m_ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+  _shaderScene.setVec3("myDirLight.m_diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+  _shaderScene.setVec3("myDirLight.m_specular", glm::vec3(0.5f, 0.5f, 0.5f));
+  // point light 1
+  _shaderScene.setVec3("myPointLight[0].m_position", pointLightPositions[0]);
+  _shaderScene.setVec3("myPointLight[0].m_ambient",
+                       glm::vec3(0.05f, 0.05f, 0.05f));
+  _shaderScene.setVec3("myPointLight[0].m_diffuse",
+                       glm::vec3(0.8f, 0.8f, 0.8f));
+  _shaderScene.setVec3("myPointLight[0].m_specular",
+                       glm::vec3(1.0f, 1.0f, 1.0f));
+  _shaderScene.setFloat("myPointLight[0].m_constant", 1.0f);
+  _shaderScene.setFloat("myPointLight[0].m_linear", 0.09);
+  _shaderScene.setFloat("myPointLight[0].m_quadratic", 0.032);
+  // point light 2
+  _shaderScene.setVec3("myPointLight[1].m_position", pointLightPositions[1]);
+  _shaderScene.setVec3("myPointLight[1].m_ambient",
+                       glm::vec3(0.05f, 0.05f, 0.05f));
+  _shaderScene.setVec3("myPointLight[1].m_diffuse",
+                       glm::vec3(0.8f, 0.8f, 0.8f));
+  _shaderScene.setVec3("myPointLight[1].m_specular",
+                       glm::vec3(1.0f, 1.0f, 1.0f));
+  _shaderScene.setFloat("myPointLight[1].m_constant", 1.0f);
+  _shaderScene.setFloat("myPointLight[1].m_linear", 0.09);
+  _shaderScene.setFloat("myPointLight[1].m_quadratic", 0.032);
+  // point light 3
+  _shaderScene.setVec3("myPointLight[2].m_position", pointLightPositions[2]);
+  _shaderScene.setVec3("myPointLight[2].m_ambient",
+                       glm::vec3(0.05f, 0.05f, 0.05f));
+  _shaderScene.setVec3("myPointLight[2].m_diffuse",
+                       glm::vec3(0.8f, 0.8f, 0.8f));
+  _shaderScene.setVec3("myPointLight[2].m_specular",
+                       glm::vec3(1.0f, 1.0f, 1.0f));
+  _shaderScene.setFloat("myPointLight[2].m_constant", 1.0f);
+  _shaderScene.setFloat("myPointLight[2].m_linear", 0.09);
+  _shaderScene.setFloat("myPointLight[2].m_quadratic", 0.032);
+  // point light 4
+  _shaderScene.setVec3("myPointLight[3].m_position", pointLightPositions[3]);
+  _shaderScene.setVec3("myPointLight[3].m_ambient",
+                       glm::vec3(0.05f, 0.05f, 0.05f));
+  _shaderScene.setVec3("myPointLight[3].m_diffuse",
+                       glm::vec3(0.8f, 0.8f, 0.8f));
+  _shaderScene.setVec3("myPointLight[3].m_specular",
+                       glm::vec3(1.0f, 1.0f, 1.0f));
+  _shaderScene.setFloat("myPointLight[3].m_constant", 1.0f);
+  _shaderScene.setFloat("myPointLight[3].m_linear", 0.09);
+  _shaderScene.setFloat("myPointLight[3].m_quadratic", 0.032);
+  // spotLight
+  _shaderScene.setVec3("mySpotLight.m_position", _camera.getPosition());
+  _shaderScene.setVec3("mySpotLight.m_direction", _camera.getFront());
+  _shaderScene.setVec3("mySpotLight.m_ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+  _shaderScene.setVec3("mySpotLight.m_diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+  _shaderScene.setVec3("mySpotLight.m_specular", glm::vec3(1.0f, 1.0f, 1.0f));
+  _shaderScene.setFloat("mySpotLight.m_constant", 1.0f);
+  _shaderScene.setFloat("mySpotLight.m_linear", 0.09);
+  _shaderScene.setFloat("mySpotLight.m_quadratic", 0.032);
+  _shaderScene.setFloat("mySpotLight.m_cutOff", glm::cos(glm::radians(12.5f)));
+  _shaderScene.setFloat("mySpotLight.m_outerCutOff",
+                        glm::cos(glm::radians(15.0f)));
 
   for (int i = 0; i < 10; i++)
   {
@@ -111,12 +163,12 @@ void render()
     _modelMatrix = glm::translate(_modelMatrix, cubePositions[i]);
     _modelMatrix = glm::rotate(_modelMatrix, glm::radians(20.0f * i),
                                glm::vec3(0.0f, 1.0f, 0.0f));
-    _shaderSpot.setMatrix("_modelMatrix", _modelMatrix);
+    _shaderScene.setMatrix("_modelMatrix", _modelMatrix);
 
     glBindVertexArray(VAO_cube);
     glDrawArrays(GL_TRIANGLES, 0, 36);
   }
-  _shaderSpot.end();
+  _shaderScene.end();
 
   // Render the sun
   _shaderSun.start();
@@ -343,6 +395,8 @@ int main()
              "shaders/pointFragment.glsl");
   initShader(&_shaderSpot, "shaders/spotVertex.glsl",
              "shaders/spotFragment.glsl");
+  initShader(&_shaderScene, "shaders/sceneLightVertex.glsl",
+             "shaders/sceneLightFragment.glsl");
   while (!glfwWindowShouldClose(window))
   {
     // input

@@ -6,7 +6,7 @@ in vec3 outFragPos;
 in vec3 outNormal;
 
 // default is sampler2D ~ 0
-
+uniform sampler2D tex;
 uniform vec3 _viewPos;
 
 struct Material {
