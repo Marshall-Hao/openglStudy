@@ -162,14 +162,24 @@ void render()
                         glm::cos(glm::radians(15.0f)));
 
   //  set the rule for stencil test, always pass the stencil test
-  glStencilFunc(GL_ALWAYS, 1, 0xFF);
+  // glStencilFunc(GL_ALWAYS, 1, 0xFF);
   // all the fragments pass the stencil test, set the stencil buffer to 1
-  glStencilMask(0xFF);
+  // glStencilMask(0xFF);
   // set the stencil drawing to replace the stencil buffer if pass the stencil
   // and depth test
-  glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+  // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
   for (int i = 0; i < 10; i++)
   {
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0x00);
+
+    if (i == 4)
+    {
+      glStencilMask(0xFF);
+
+      glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    }
+
     _modelMatrix = glm::mat4(1.0f);
     _modelMatrix = glm::translate(_modelMatrix, cubePositions[i]);
     _modelMatrix = glm::rotate(_modelMatrix, glm::radians(20.0f * i),
@@ -183,15 +193,22 @@ void render()
 
   // set the pass rule for stencil test, only pass the stencil test when not eq
   // to 1
-  glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+  // glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
   // disable the stencil writing
-  glStencilMask(0x00);
+  // glStencilMask(0x00);
   // draw the edge of the cube
   _shaderEdge.start();
   _shaderEdge.setMatrix("_viewMatrix", _camera.getViewMatrix());
   _shaderEdge.setMatrix("_projectionMatrix", _projectionMatrix);
   for (int i = 0; i < 10; i++)
   {
+    // set the stencil test never pass if i != 4, then the shader wont work
+    glStencilFunc(GL_NEVER, 1, 0xFF);
+
+    if (i == 4)
+    {
+      glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    }
     _modelMatrix = glm::mat4(1.0f);
     _modelMatrix = glm::translate(_modelMatrix, cubePositions[i]);
     _modelMatrix = glm::rotate(_modelMatrix, glm::radians(20.0f * i),
