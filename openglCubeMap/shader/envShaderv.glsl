@@ -15,4 +15,9 @@ void main() {
   // get the normal after the model matrix is applied
   outNormal = mat3(transpose(inverse(_modelMatrix))) * aNormal;
   outPos = vec3(_modelMatrix * vec4(aPos, 1.0));
+
+  // optional
+
+  // gl_PointSize = 10.0;
+  // gl_VertexID;
 }
