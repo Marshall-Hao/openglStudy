@@ -5,11 +5,13 @@
 
 uint VAO_cube = 0;
 uint VAO_sky = 0;
+uint VAO_RCube = 0;
 
 ffImage* _pImage = NULL;
 
 Shader _shader;
 Shader _shaderSky;
+Shader _shaderEnv;
 
 // 光照贴图
 uint _textureBox = 0;
@@ -36,18 +38,18 @@ void rend()
 
   // 渲染box
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, _textureBox);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, _textureSky);
 
-  _shader.start();
-  _shader.setMatrix("_modelMatrix", _modelMatrix);
-  _shader.setMatrix("_viewMatrix", _camera.getMatrix());
-  _shader.setMatrix("_projMatrix", _projMatrix);
-
+  _shaderEnv.start();
+  _shaderEnv.setMatrix("_modelMatrix", _modelMatrix);
+  _shaderEnv.setMatrix("_viewMatrix", _camera.getMatrix());
+  _shaderEnv.setMatrix("_projMatrix", _projMatrix);
+  _shaderEnv.setVec3("_viewPos", _camera.getPosition());
   // 绘制方盒
-  glBindVertexArray(VAO_cube);
+  glBindVertexArray(VAO_RCube);
   glDrawArrays(GL_TRIANGLES, 0, 36);
 
-  _shader.end();
+  _shaderEnv.end();
 
   // 渲染天空盒
   glDepthFunc(GL_LEQUAL);
@@ -307,10 +309,80 @@ uint creatSkyBoxVAO()
   return _VAO;
 }
 
+uint createRefVAO()
+{
+  uint _VAO = 0;
+  uint _VBO = 0;
+
+  // clang-format off
+  float vertices[] = {
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+  };
+  // clang-format on
+
+  glGenVertexArrays(1, &_VAO);
+  glBindVertexArray(_VAO);
+
+  glGenBuffers(1, &_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                        (void*)(sizeof(float) * 3));
+
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  return _VAO;
+}
 void initShader()
 {
   _shader.initShader("shader/vertexShader.glsl", "shader/fragmentShader.glsl");
   _shaderSky.initShader("shader/skyShaderv.glsl", "shader/skyShaderf.glsl");
+  _shaderEnv.initShader("shader/envShaderv.glsl", "shader/envShaderf.glsl");
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -392,6 +464,7 @@ int main()
 
   VAO_cube = createModel();
   VAO_sky = creatSkyBoxVAO();
+  VAO_RCube = createRefVAO();
   _textureBox = createTexture("res/box.png");
   _textureSky = createSkyBoxTex();
   initShader();
