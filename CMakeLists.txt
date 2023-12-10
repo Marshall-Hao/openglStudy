@@ -49,3 +49,38 @@ add_custom_target(openglStudyCopyTextures ALL
    ${CMAKE_CURRENT_SOURCE_DIR}/src/textures
    $<TARGET_FILE_DIR:openglStudy>/textures
 )
+
+add_executable(openglFrameBuffer)
+target_include_directories(openglFrameBuffer PRIVATE frameBuffer/include)
+
+target_sources(openglFrameBuffer
+        PRIVATE
+        frameBuffer/openGLFW.cpp
+        frameBuffer/Shader.cpp
+        frameBuffer/ffImage.cpp
+        frameBuffer/Camera.cpp
+        include/Base.h
+        include/Shader.h
+        include/stb_image.h
+        include/ffImage.h
+        include/Camera.h
+   )
+
+target_link_libraries(openglFrameBuffer
+        PRIVATE
+        glfw
+        glad::glad
+        glm::glm)
+
+ # Copy the shaders to the build directory
+add_custom_target(openglFrameBufferCopyShaders ALL
+COMMAND ${CMAKE_COMMAND} -E copy_directory
+${CMAKE_CURRENT_SOURCE_DIR}/frameBuffer/shader
+$<TARGET_FILE_DIR:openglFrameBuffer>/shader
+)
+
+add_custom_target(openglFrameBufferCopyTextures ALL
+   COMMAND ${CMAKE_COMMAND} -E copy_directory
+   ${CMAKE_CURRENT_SOURCE_DIR}/frameBuffer/res
+   $<TARGET_FILE_DIR:openglFrameBuffer>/res
+)
