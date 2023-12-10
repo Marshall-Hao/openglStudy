@@ -145,3 +145,32 @@ target_link_libraries(advanceGLSL
  ${CMAKE_CURRENT_SOURCE_DIR}/advanceGLSL/shader
  $<TARGET_FILE_DIR:advanceGLSL>/shader
  )
+
+add_executable(GeometryShader)
+target_include_directories(GeometryShader PRIVATE GeometryShader/include)
+
+target_sources(GeometryShader
+        PRIVATE
+        GeometryShader/openGLFW.cpp
+        GeometryShader/Shader.cpp
+        GeometryShader/ffImage.cpp
+        GeometryShader/Camera.cpp
+        include/Base.h
+        include/Shader.h
+        include/stb_image.h
+        include/ffImage.h
+        include/Camera.h
+   )
+
+target_link_libraries(GeometryShader
+        PRIVATE
+        glfw
+        glad::glad
+        glm::glm)
+
+ # Copy the shaders to the build directory
+ add_custom_target(GeometryShaderCopyShaders ALL
+ COMMAND ${CMAKE_COMMAND} -E copy_directory
+ ${CMAKE_CURRENT_SOURCE_DIR}/GeometryShader/shader
+ $<TARGET_FILE_DIR:GeometryShader>/shader
+ )
