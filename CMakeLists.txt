@@ -79,8 +79,39 @@ ${CMAKE_CURRENT_SOURCE_DIR}/frameBuffer/shader
 $<TARGET_FILE_DIR:openglFrameBuffer>/shader
 )
 
-add_custom_target(openglFrameBufferCopyTextures ALL
-   COMMAND ${CMAKE_COMMAND} -E copy_directory
-   ${CMAKE_CURRENT_SOURCE_DIR}/frameBuffer/res
-   $<TARGET_FILE_DIR:openglFrameBuffer>/res
+add_custom_target(openglFrameBufferCopyRes ALL
+COMMAND ${CMAKE_COMMAND} -E copy_directory
+${CMAKE_CURRENT_SOURCE_DIR}/frameBuffer/res
+$<TARGET_FILE_DIR:openglFrameBuffer>/res
 )
+
+add_executable(openglCubeMap)
+target_include_directories(openglCubeMap PRIVATE openglCubeMap/include)
+
+target_sources(openglCubeMap
+        PRIVATE
+        openglCubeMap/openGLFW.cpp
+        openglCubeMap/Shader.cpp
+        openglCubeMap/ffImage.cpp
+        openglCubeMap/Camera.cpp
+        include/Base.h
+        include/Shader.h
+        include/stb_image.h
+        include/ffImage.h
+        include/Camera.h
+   )
+
+target_link_libraries(openglCubeMap
+        PRIVATE
+        glfw
+        glad::glad
+        glm::glm)
+
+ # Copy the shaders to the build directory
+add_custom_target(openglCubeMapCopyShaders ALL
+COMMAND ${CMAKE_COMMAND} -E copy_directory
+${CMAKE_CURRENT_SOURCE_DIR}/openglCubeMap/shader
+$<TARGET_FILE_DIR:openglCubeMap>/shader
+)
+
+
