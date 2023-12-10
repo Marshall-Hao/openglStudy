@@ -107,6 +107,7 @@ target_link_libraries(openglCubeMap
         glad::glad
         glm::glm)
 
+
  # Copy the shaders to the build directory
 add_custom_target(openglCubeMapCopyShaders ALL
 COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -115,3 +116,32 @@ $<TARGET_FILE_DIR:openglCubeMap>/shader
 )
 
 
+
+add_executable(advanceGLSL)
+target_include_directories(advanceGLSL PRIVATE advanceGLSL/include)
+
+target_sources(advanceGLSL
+        PRIVATE
+        advanceGLSL/openGLFW.cpp
+        advanceGLSL/Shader.cpp
+        advanceGLSL/ffImage.cpp
+        advanceGLSL/Camera.cpp
+        include/Base.h
+        include/Shader.h
+        include/stb_image.h
+        include/ffImage.h
+        include/Camera.h
+   )
+
+target_link_libraries(advanceGLSL
+        PRIVATE
+        glfw
+        glad::glad
+        glm::glm)
+
+ # Copy the shaders to the build directory
+ add_custom_target(advanceGLSLCopyShaders ALL
+ COMMAND ${CMAKE_COMMAND} -E copy_directory
+ ${CMAKE_CURRENT_SOURCE_DIR}/advanceGLSL/shader
+ $<TARGET_FILE_DIR:advanceGLSL>/shader
+ )
