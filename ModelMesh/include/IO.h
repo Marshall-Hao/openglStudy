@@ -1,4 +1,9 @@
 #pragma once
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
+#include <assimp/Importer.hpp>
+
 #include "Base.h"
 #include "Shader.h"
 namespace FF
@@ -43,5 +48,21 @@ class ffMesh
   uint m_VAO;
   uint m_VBO;
   void setupMesh();
+}
+
+class ffModel
+{
+ public:
+  ffModel(const char* _path) { loadModel(_path); }
+  void draw(Shader& _shader);
+
+ private:
+  std::vector<ffMesh> m_meshVec;
+  std::string m_dir;
+
+  void loadModel(const char* _path);
+  // processNode will be called recursively, aiNode is a treem aiScene is a tree
+  void processNode(aiNode* _node, const aiScene* _scene);
+  ffMesh processMesh(aiMesh* _mesh, const aiScene* _scene);
 }
 }  // namespace FF

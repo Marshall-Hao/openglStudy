@@ -1,5 +1,10 @@
 #include "IO.h"
 
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
+#include <assimp/Importer.hpp>
+
 namespace FF
 {
 ffMesh::ffMesh(std::vector<ffVertex> _vertexVec, std::vector<uint> _indexVec,
@@ -76,5 +81,86 @@ void ffMesh::setupMesh()
 
   glBindbuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
+}
+
+void ffModel::loadModel(const char* _path)
+{
+  // read file via ASSIMP
+  Assimp::Importer _importer;
+  const aiScene* _scene =
+      _importer.ReadFile(_path, aiProcess_Triangulate | aiProcess_FlipUVs);
+
+  if (!_scene || _scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
+      !_scene->mRootNode)
+  {
+    std::cout << "ERROR::ASSIMP::" << _importer.GetErrorString() << std::endl;
+    return;
+  }
+
+  m_dir = _path.substr(0, _path.find_last_of('/'));
+  processNode(_scene->mRootNode, _scene);
+}
+// processNode will be called recursively, aiNode is a treem aiScene is a tree
+void ffModel::processNode(aiNode* _node, const aiScene* _scene)
+{
+  for (uint i = 0; i < _node->mNumMeshes; i++)
+  {
+    aiMesh* _mesh = _scene->mMeshes[_node->mMeshes[i]];
+    m_meshVec.push_back(processMesh(_mesh, _scene));
+  }
+
+  for (uint i = 0; i < _node->mNumChildren; i++)
+  {
+    processNode(_node->mChildren[i], _scene);
+  }
+}
+ffMesh ffModel::processMesh(aiMesh* _mesh, const aiScene* _scene)
+{
+  std::vector<ffVertex> _vertexVec;
+  std::vector<uint> _indexVec;
+  std::vector<ffTexture> _texVec;
+
+  for (uint i = 0; i < _mesh->mNumVertices; i++)
+  {
+    ffVertex _vertex;
+
+    // position
+    glm::vec3 _pos;
+    _pos.x = _mesh->mVertices[i].x;
+    _pos.y = _mesh->mVertices[i].y;
+    _pos.z = _mesh->mVertices[i].z;
+    _vertex.m_pos = _pos;
+
+    // normal
+    glm::vec3 _normal;
+    _normal.x = _mesh->mNormals[i].x;
+    _normal.y = _mesh->mNormals[i].y;
+    _normal.z = _mesh->mNormals[i].z;
+    _vertex.m_normal = _normal;
+
+    // UV
+    // mesh can have up to 8 different texture coordinates, 0 is the basic uv
+    if (_mesh->mTextureCoords[0])
+    {
+      glm::vec3 _texCoord;
+      _texCoord.x = _mesh->mTextureCoords[0][i].x;
+      _texCoord.y = _mesh->mTextureCoords[0][i].y;
+      _vertex.m_texCoord = _texCoord;
+    }
+
+    _vertexVec.push_back(_vertex);
+  }
+  // index
+  // mNumFaces: the number of faces
+  for (uint i = 0; i < _mesh->mNumFaces; i++)
+  {
+    // mFaces: the array of faces
+    aiFace _face = _mesh->mFaces[i];
+    // mNumIndices: the number of indices of the face
+    for (uint j = 0; j < _face.mNumIndices; j++)
+    {
+      _indexVec.push_back(_face.mIndices[j]);
+    }
+  }
 }
 }  // namespace FF
