@@ -5,6 +5,8 @@
 
 #include <assimp/Importer.hpp>
 
+#include "Base.h"
+#include "ffImage.h"
 namespace FF
 {
 ffMesh::ffMesh(std::vector<ffVertex> _vertexVec, std::vector<uint> _indexVec,
@@ -37,7 +39,7 @@ void ffMesh::draw(Shader& _shader)
       _numStr = std::to_string(_specularN++);
     }
 
-    _shader.setFloat("myMaterial." + _typename + _numStr, i);
+    _shader.setFloat("myMaterial." + _typeName + _numStr, i);
     glBindTexture(GL_TEXTURE_2D, m_texVec[i].m_id);
   }
 
@@ -60,7 +62,7 @@ void ffMesh::setupMesh()
   glGenBuffers(1, &_VBO);
   glBindBuffer(GL_ARRAY_BUFFER, _VBO);
 
-  glbufferData(GL_ARRAY_BUFFER, m_vertexVec.size() * sizeof(ffVertex),
+  glBufferData(GL_ARRAY_BUFFER, m_vertexVec.size() * sizeof(ffVertex),
                &m_vertexVec[0], GL_STATIC_DRAW);
 
   glGenBuffers(1, &_EBO);
@@ -68,22 +70,22 @@ void ffMesh::setupMesh()
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indexVec.size() * sizeof(uint),
                &m_indexVec[0], GL_STATIC_DRAW);
 
-  glenableVertexAttribArray(0);
-  glvertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ffVertex), (void*)0);
-  glenableVertexAttribArray(1);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ffVertex), (void*)0);
+  glEnableVertexAttribArray(1);
   // offsetof: get the offset of the member in the struct
   // void*: means the offset is a pointer
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(ffVertex),
                         (void*)offsetof(ffVertex, m_normal));
-  glenableVertexAttribArray(2);
-  glvertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(ffVertex),
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(ffVertex),
                         (void*)offsetof(ffVertex, m_texCoord));
 
-  glBindbuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 }
 
-void ffModel::loadModel(const char* _path)
+void ffModel::loadModel(std::string _path)
 {
   // read file via ASSIMP
   Assimp::Importer _importer;
@@ -93,7 +95,7 @@ void ffModel::loadModel(const char* _path)
   if (!_scene || _scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
       !_scene->mRootNode)
   {
-    std::cout << "ERROR::ASSIMP::" << _importer.GetErrorString() << std::endl;
+    std::cout << "model read fail!" << std::endl;
     return;
   }
 
@@ -162,5 +164,96 @@ ffMesh ffModel::processMesh(aiMesh* _mesh, const aiScene* _scene)
       _indexVec.push_back(_face.mIndices[j]);
     }
   }
+
+  // material
+  if (_mesh->mMaterialIndex >= 0)
+  {
+    // _mesh->mMaterialIndex is the index of the material in the scene
+    // every mesh has a material index
+    aiMaterial* _mat = _scene->mMaterials[_mesh->mMaterialIndex];
+    std::vector<ffTexture> _diffuseVec =
+        loadMaterialTexture(_mat, aiTextureType_DIFFUSE, TEXTURE_DIFFUSE_STR);
+    // the reason why we use insert is that we want to append the vector
+    _texVec.insert(_texVec.end(), _diffuseVec.begin(), _diffuseVec.end());
+
+    std::vector<ffTexture> _specularVec =
+        loadMaterialTexture(_mat, aiTextureType_SPECULAR, TEXTURE_SPECULAR_STR);
+    _texVec.insert(_texVec.end(), _specularVec.begin(), _specularVec.end());
+  }
+
+  return ffMesh(_vertexVec, _indexVec, _texVec);
+}
+
+std::vector<ffTexture> ffModel::loadMaterialTexture(aiMaterial* _mat,
+                                                    aiTextureType _type,
+                                                    std::string _typeName)
+{
+  std::vector<ffTexture> _texVec;
+
+  // get the number of textures
+  for (uint i = 0; i < _mat->GetTextureCount(_type); i++)
+  {
+    ffTexture _tex;
+    // _mat->GetTexture will get the path of the texture
+    //_path: the path  relative to the model file, its a relative path and value
+    // preserved
+    aiString _path;
+
+    _mat->GetTexture(_type, i, &_path);
+
+    _tex.m_id =
+        ffTextureManager::getInstance()->createTexture(_path.C_Str(), m_dir);
+    _tex.m_path = _path.C_Str();
+    _tex.m_type = _typeName;
+
+    _texVec.push_back(_tex);
+  }
+
+  return _texVec;
+}
+
+// draw the model with every
+void ffModel::draw(Shader& _shader)
+{
+  for (uint i = 0; i < m_meshVec.size(); i++)
+  {
+    m_meshVec[i].draw(_shader);
+  }
+}
+
+// set the ffTextureManager as a single instance ,point to nullptr for now
+SINGLE_INSTANCE_SET(ffTextureManager)
+
+uint ffTextureManager::createTexture(std::string _path)
+{
+  // iterate the map to find if the texture has been created
+  std::map<std::string, uint>::iterator _it = m_texMap.find(_path);
+  if (_it != m_texMap.end())
+  {
+    return _it->second;
+  }
+
+  ffImage* _pImage = ffImage::readFromFile(_path.c_str());
+  uint _texID = 0;
+  glGenTextures(1, &_texID);
+  glBindTexture(GL_TEXTURE_2D, _texID);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _pImage->getWidth(),
+               _pImage->getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+               _pImage->getData());
+
+  delete _pImage;
+  m_texMap[_path] = _texID;
+  return _texID;
+}
+
+uint ffTextureManager::createTexture(std::string _path, std::string _dir)
+{
+  return createTexture(_dir + '/' + _path);
 }
 }  // namespace FF

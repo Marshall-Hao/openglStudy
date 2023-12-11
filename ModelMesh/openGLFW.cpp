@@ -1,5 +1,6 @@
 ﻿#include "Base.h"
 #include "Camera.h"
+#include "IO.h"
 #include "Shader.h"
 #include "ffImage.h"
 
@@ -8,7 +9,7 @@ uint VAO_cube = 0;
 ffImage* _pImage = NULL;
 
 Shader _shader;
-
+FF::ffModel* _model = NULL;
 // 光照贴图
 uint _textureBox = 0;
 
@@ -32,17 +33,26 @@ void rend()
   _modelMatrix = glm::translate(_modelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
   // 渲染box
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, _textureBox);
+  // glActiveTexture(GL_TEXTURE0);
+  // glBindTexture(GL_TEXTURE_2D, _textureBox);
 
   _shader.start();
   _shader.setMatrix("_modelMatrix", _modelMatrix);
   _shader.setMatrix("_viewMatrix", _camera.getMatrix());
   _shader.setMatrix("_projMatrix", _projMatrix);
+  _shader.setFloat("myMaterial.m_shiness", 32.0f);
+  _shader.setVec3("view_pos", _camera.getPosition());
 
-  // 绘制方盒
-  glBindVertexArray(VAO_cube);
-  glDrawArrays(GL_TRIANGLES, 0, 36);
+  _shader.setVec3("myLight.m_pos", glm::vec3(0.0f, 1.0f, 1.0f));
+  _shader.setVec3("myLight.m_ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+  _shader.setVec3("myLight.m_diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+  _shader.setVec3("myLight.m_specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+  _shader.setFloat("myLight.c", 1.0f);
+  _shader.setFloat("myLight.l", 0.09f);
+  _shader.setFloat("myLight.q", 0.032f);
+
+  _model->draw(_shader);
 
   _shader.end();
 }
@@ -191,7 +201,10 @@ uint createTexture(const char* _fileName)
 
 void initShader()
 {
-  _shader.initShader("shader/vertexShader.glsl", "shader/fragmentShader.glsl");
+  _shader.initShader("shader/vPointShader.glsl", "shader/fPointShader.glsl");
+
+  // _shader.initShader("shader/vertexShader.glsl",
+  // "shader/fragmentShader.glsl");
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -269,11 +282,11 @@ int main()
 
   _camera.lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f),
                  glm::vec3(0.0f, 1.0f, 0.0f));
-  _camera.setSpeed(0.001f);
+  _camera.setSpeed(0.01f);
 
   VAO_cube = createModel();
 
-  _textureBox = createTexture("res/box.png");
+  _model = new FF::ffModel("res/bag/backpack.obj");
   initShader();
 
   while (!glfwWindowShouldClose(window))

@@ -6,7 +6,6 @@ in vec3 outFragPos;
 in vec3 outNormal;
 
 struct Material {
-  // its actually means the texture unit(index)
   sampler2D texture_diffuse1;
   sampler2D texture_specular1;
 

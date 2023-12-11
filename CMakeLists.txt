@@ -175,6 +175,37 @@ target_link_libraries(GeometryShader
  $<TARGET_FILE_DIR:GeometryShader>/shader
  )
 
+# add_executable(ModelMesh)
+# target_include_directories(ModelMesh PRIVATE ModelMesh/include)
+
+# target_sources(ModelMesh
+#         PRIVATE
+#         ModelMesh/openGLFW.cpp
+#         ModelMesh/Shader.cpp
+#         ModelMesh/ffImage.cpp
+#         ModelMesh/Camera.cpp
+#         include/Base.h
+#         include/Shader.h
+#         include/stb_image.h
+#         include/ffImage.h
+#         include/Camera.h
+
+#    )
+
+# target_link_libraries(ModelMesh
+#         PRIVATE
+#         glfw
+#         glad::glad
+#         glm::glm
+#         assimp::assimp)
+
+#  # Copy the shaders to the build directory
+#  add_custom_target(ModelMeshCopyShaders ALL
+#  COMMAND ${CMAKE_COMMAND} -E copy_directory
+#  ${CMAKE_CURRENT_SOURCE_DIR}/ModelMesh/shader
+#  $<TARGET_FILE_DIR:ModelMesh>/shader
+#  )
+
 add_executable(ModelMesh)
 target_include_directories(ModelMesh PRIVATE ModelMesh/include)
 
@@ -184,11 +215,13 @@ target_sources(ModelMesh
         ModelMesh/Shader.cpp
         ModelMesh/ffImage.cpp
         ModelMesh/Camera.cpp
+        ModelMesh/IO.cpp
         include/Base.h
         include/Shader.h
         include/stb_image.h
         include/ffImage.h
         include/Camera.h
+        ModelMesh/include/IO.h
    )
 
 target_link_libraries(ModelMesh
@@ -196,7 +229,8 @@ target_link_libraries(ModelMesh
         glfw
         glad::glad
         glm::glm
-        assimp::assimp)
+        assimp::assimp
+        )
 
  # Copy the shaders to the build directory
  add_custom_target(ModelMeshCopyShaders ALL
