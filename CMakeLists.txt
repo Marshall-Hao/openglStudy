@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
-
+find_package(assimp CONFIG REQUIRED)
 
 add_executable(openglStudy)
 target_include_directories(openglStudy PRIVATE include)
@@ -173,4 +173,34 @@ target_link_libraries(GeometryShader
  COMMAND ${CMAKE_COMMAND} -E copy_directory
  ${CMAKE_CURRENT_SOURCE_DIR}/GeometryShader/shader
  $<TARGET_FILE_DIR:GeometryShader>/shader
+ )
+
+add_executable(ModelMesh)
+target_include_directories(ModelMesh PRIVATE ModelMesh/include)
+
+target_sources(ModelMesh
+        PRIVATE
+        ModelMesh/openGLFW.cpp
+        ModelMesh/Shader.cpp
+        ModelMesh/ffImage.cpp
+        ModelMesh/Camera.cpp
+        include/Base.h
+        include/Shader.h
+        include/stb_image.h
+        include/ffImage.h
+        include/Camera.h
+   )
+
+target_link_libraries(ModelMesh
+        PRIVATE
+        glfw
+        glad::glad
+        glm::glm
+        assimp::assimp)
+
+ # Copy the shaders to the build directory
+ add_custom_target(ModelMeshCopyShaders ALL
+ COMMAND ${CMAKE_COMMAND} -E copy_directory
+ ${CMAKE_CURRENT_SOURCE_DIR}/ModelMesh/shader
+ $<TARGET_FILE_DIR:ModelMesh>/shader
  )

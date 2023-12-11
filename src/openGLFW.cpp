@@ -312,7 +312,7 @@ uint createModel()
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
   // enable the vertex attribute for color for layout 1, stride is 6 * sizeof
   // float , and color start at 3 * sizeof float
-
+  // void* is the offset of where the color data begins
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                         (void*)(sizeof(float) * 3));
 

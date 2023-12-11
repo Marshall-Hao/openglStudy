@@ -41,7 +41,7 @@ void Shader::initShader(const char* _vertexPath, const char* _fragPath,
 
 uint Shader::compileShader(const char* _shaderPath, GLint _shaderType)
 {
-  if (_shaderPath == "" || _shaderPath == NULL)
+  if (_shaderPath == NULL)
   {
     return -1;
   }
