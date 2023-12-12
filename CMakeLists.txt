@@ -238,3 +238,37 @@ target_link_libraries(ModelMesh
  ${CMAKE_CURRENT_SOURCE_DIR}/ModelMesh/shader
  $<TARGET_FILE_DIR:ModelMesh>/shader
  )
+
+
+add_executable(instanceOpt)
+target_include_directories(instanceOpt PRIVATE instanceOpt/include)
+
+target_sources(instanceOpt
+        PRIVATE
+        instanceOpt/openGLFW.cpp
+        instanceOpt/Shader.cpp
+        instanceOpt/ffImage.cpp
+        instanceOpt/Camera.cpp
+        instanceOpt/IO.cpp
+        include/Base.h
+        include/Shader.h
+        include/stb_image.h
+        include/ffImage.h
+        include/Camera.h
+        instanceOpt/include/IO.h
+   )
+
+target_link_libraries(instanceOpt
+        PRIVATE
+        glfw
+        glad::glad
+        glm::glm
+        assimp::assimp
+        )
+
+ # Copy the shaders to the build directory
+ add_custom_target(instanceOptCopyShaders ALL
+ COMMAND ${CMAKE_COMMAND} -E copy_directory
+ ${CMAKE_CURRENT_SOURCE_DIR}/instanceOpt/shader
+ $<TARGET_FILE_DIR:instanceOpt>/shader
+ )
